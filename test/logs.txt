@@ -1,7 +1,6 @@
-B11/18/2021 13:51:54Halo! Bisa ceritakan masalahmu?
-U11/18/2021 13:51:57hai
-B11/18/2021 13:51:57Halo! Bisa ceritakan masalahmu?
-U11/18/2021 13:52:01Halo
-B11/18/2021 13:52:01Halo! Bisa ceritakan masalahmu?
-U11/18/2021 13:52:03Brr
-B11/18/2021 13:52:03Maaf, bot tidak mengenal pesan itu. Bisa ceritakan masalahmu?
+B11/18/2021 18:02:31Halo! Bisa ceritakan masalahmu?
+U11/18/2021 18:02:34Halo, perusahaan saya di bidang food and beverages, ingin bertanya bagaimana cara memasang ads untuk website kami
+B11/18/2021 18:02:34Kamu ingin memasang advertisement dari penyedia iklan apa? (Instagram/Facebook/Google)
+U11/18/2021 18:02:36Instagram
+B11/18/2021 18:02:36<b>Cara memasang ads di Instagram:</b><br>1. Buat Fanpage di Facebook<br>2. Pilih Create Ads<br>3. Pilih tujuan beriklan<br>4. Tentukan target audiens dan anggaran<br>5. Format iklan
+B11/18/2021 18:02:36Bila ada kendala, kamu bisa langsung menghubungi salah satu mentor kami dengan menekan tombol di bawah ini

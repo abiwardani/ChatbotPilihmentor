@@ -65,6 +65,38 @@ def exactmatch(text, pattern):
     else:
         return -1
 
+def extractBidang(text, start):
+    if (start != -1):
+        lenT = len(text)
+        if (lenT-start < 8): #pengguna tidak mengelaborasi bidang bisnisnya
+            return None
+        
+        candidates = [bm(text[start+7::], ","), bm(text[start+7::], " dan")-1, bm(text[start+7::]," terus")-1, bm(text[start+7::], ".")]
+        eligible = [e for e in candidates if e >= 0]
+        if (len(eligible) == 0):
+            return None
+        
+        end = min(eligible)
+
+        return (text[start+7::])[0:end+1]
+
+def findKeywords(text, bidang, keyword_list):
+    result = []
+    for pattern in keyword_list:
+        if (bm(text, pattern) != -1):
+            result.append(pattern)
+    
+    return result
+
+def keywordsIntersect(list1, list2):
+    for word in list1:
+        if (word in list2):
+            return True
+    
+    return False
+
+#LEGACY
+
 def objek(text):
     try:
         o = re.search(formatJenis+' (.+?) pada', text).group(2)

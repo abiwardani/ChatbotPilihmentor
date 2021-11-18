@@ -116,6 +116,21 @@ div.messageBox {
     border: 1px solid black;
 }
 
+a.hubungi-mentor-button {
+    text-align: left;
+    width: fit-content;
+    max-width: 320px;
+    float: left;
+    text-decoration: none;
+    padding: 8px 12px;
+    background: #e98d8d;
+    color: #ffffff;
+    border-radius: 10px;
+    font-weight: normal;
+    font-family: Arial;
+    font-size: 18px;
+}
+
 #message {
     height: 24px;
     width: 340px;

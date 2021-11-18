@@ -4,9 +4,12 @@ import msgParser as p
 from flask import Flask, render_template, flash, request, url_for, redirect
 from werkzeug.utils import secure_filename
 import levenshtein as l
+import json
 
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
+
+#--- App Pages ---#
 
 @app.route('/')
 def mainPage():
@@ -16,317 +19,36 @@ def mainPage():
     log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+message+"\n"
     f.write(log)
     f.close()
-    return render_template('mainpage.html')
 
-def processInput(text):
-    #ignore trailing/leading whitespace
-    text = text.strip()
-    #check kata-kata kunci setiap command menggunakan algoritma boyer-moore untuk exact string matching
-    #algoritma mengembalikan -1 jika tidak ditemukan, jika ditemukan mengembalikan indeks mulai substring
-    deadlineFlag = max(p.bm(text, "deadline"), p.bm(text, "Deadline"))
-    kuisFlag = max(p.bm(text, "kuis"), p.bm(text, "Kuis"))
-    tubesFlag = max(p.bm(text, "tubes"), p.bm(text, "Tubes"))
-    tucilFlag = max(p.bm(text, "tucil"), p.bm(text, "Tucil"))
-    ujianFlag = max(p.bm(text, "ujian"), p.bm(text, "Ujian"))
-    praktikumFlag = max(p.bm(text, "praktikum"), p.bm(text, "Praktikum"))
-    tugasFlag = max(p.bm(text, "tugas"), p.bm(text, "Tugas"))
-    kapanFlag = max(p.bm(text, "kapan"), p.bm(text, "Kapan"))
-    pertanyaanFlag = (p.bm(text, "?") == len(text)-1)
-    undurFlag = max(p.bm(text, "undur"), p.bm(text, "Undur"))
-    selesaiFlag = max(p.bm(text, "selesai"), p.bm(text, "Selesai"), p.bm(text, "menyelesaikan"), p.bm(text, "Menyelesaikan"))
-    bisaFlag = max(p.bm(text, " bisa "), p.bm(text, "Bisa "))
-    
-    sapaFlag = max(p.bm(text, "halo"), p.bm(text, "Halo"), p.bm(text, "hai"), p.bm(text, "Hai"), p.exactmatch(text, "hi"), p.exactmatch(text, "Hi"), p.bm(text, "hei"), p.bm(text, "Hei"), p.bm(text, "hei"), p.bm(text, "Hei"))
-
-    now = datetime.now()
-    
-    #jika ada tanda tanya di akhir
-    if (pertanyaanFlag):
-        #jika ada kata kunci "kapan" atau ada kata penting
-        if (deadlineFlag != -1 or kuisFlag != -1 or tubesFlag != -1 or tucilFlag != -1 or ujianFlag != -1 or praktikumFlag != -1 or tugasFlag != -1 or kapanFlag != -1):
-            #check kata-kata kunci setiap sub-command
-            f = open("test/logs.txt", "a+")
-            hariIniFlag = max(p.bm(text, "hari ini"), p.bm(text, "Hari ini"))
-            hariFlag = p.bm(text, "hari")
-            mingguFlag = p.bm(text, "minggu")
-            mind = now.date() #menunjukan deadline minimum hari ini
-            maxd = None
-            error = False
-            d1, d2 = p.duaTanggal(text)
-            if (hariIniFlag != -1):
-                #jika parameter berupa "hari ini", max date = hari ini
-                maxd = now.date()
-            elif (hariFlag != -1):
-                #jika bukan "hari ini" dan ada kata "hari", cek jika "N hari"
-                n = p.nWaktu(text)
-                if (n != None):
-                    maxd = now.date()+timedelta(days=n)
-                else:
-                    response = "<b>[JUMLAH HARI BUKAN MERUPAKAN JUMLAH YANG VALID]</b>"
-                    error = True
-            elif (mingguFlag != -1):
-                #jika ada kata "minggu", cek jika "N minggu"
-                n = p.nWaktu(text)
-                if (n != None):
-                    maxd = now.date()+timedelta(days=7*n)
-                else:
-                    response = "<b>[JUMLAH MINGGU BUKAN MERUPAKAN JUMLAH YANG VALID]</b>"
-                    error = True
-            elif (d1 != None and d2 != None):
-                #jika bukan dua-duanya, cek jika "DATE_1 ... DATE_2"                
-                if not (d1 == None and d2 == None):
-                    mind = p.toDateObj(d1)
-                    maxd = p.toDateObj(d2)
-                    if (mind == None or maxd == None):
-                        response = "<b>[FORMAT DATE_1 ATAU DATE_2 TIDAK DIKENALI]</b>"
-                        error = True
-            
-            if (not error):
-                m = p.matkul(text)
-                if kuisFlag != -1:
-                    j = text[kuisFlag:kuisFlag+4].capitalize()
-                elif tubesFlag != -1:
-                    j = text[tubesFlag:tubesFlag+5].capitalize()
-                elif tucilFlag != -1:
-                    j = text[tucilFlag:tucilFlag+5].capitalize()
-                elif ujianFlag != -1:
-                    j = text[ujianFlag:ujianFlag+5].capitalize()
-                elif praktikumFlag != -1:
-                    j = text[praktikumFlag:praktikumFlag+9].capitalize()
-                elif tugasFlag != -1:
-                    j = text[tugasFlag:tugasFlag+5].capitalize()
-                else:
-                    j = None
-                body = responseBody(mindate=mind, maxdate=maxd, matkul=m, jenis=j)
-                if (body != ""):
-                    if (kapanFlag != -1):
-                        oneTask = p.oneTaskOnly(body)
-                        if (not oneTask):
-                            tanggal = p.translateTanggal(body)
-                            response = datetime.strptime(tanggal, "%d %m %Y").strftime("%d %B %Y")
-                    else:
-                        response = "<b>[DAFTAR DEADLINE]</b><br>"+body
-                else:
-                    response = "Tidak ada"
-            else:
-                response = badPesanBody()
-            log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
-            f.write(log)
-            f.close()
-        elif (bisaFlag != -1):
-            f = open("test/logs.txt", "a+")
-            response = helpBody()
-            log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
-            f.write(log)
-            f.close()
-        else:
-            #error handling
-            response = badPesanBody(text)
-    
-    elif (undurFlag != -1 or selesaiFlag != -1):
-        nTask = p.task(text)
-
-        if (nTask != None):
-            tasks = loadTasks()
-            tasksBody = ""
-            i = 1
-            times = sorted(list(tasks.keys()))
-
-            f = open("test/tasks.txt", "w")
-
-            if (undurFlag != -1):
-                nDate = p.translateTanggal(text)
-                try:
-                    nDate = datetime.strptime(nDate, '%d %m %Y')
-                except:
-                    nDate = datetime.strptime(nDate, '%d %m %y')
-                for time in times:
-                    date = datetime.strptime(time, "%m/%d/%Y").date()
-                    for task in tasks[time]:
-                        if (i != nTask):
-                            tasksBody += task[0]+"---"+date.strftime("%m/%d/%Y")+"---"+task[1]+"---"+task[2]+"\n"
-                        elif (i == nTask):
-                            tasksBody += task[0]+"---"+nDate.strftime("%m/%d/%Y")+"---"+task[1]+"---"+task[2]+"\n"
-                        i += 1
-                if (nTask >= 1 and nTask < i):
-                    f = open("test/tasks.txt", "w")
-                    f.write(tasksBody)
-                    f.close()
-
-                    f = open("test/logs.txt", "a+")
-                    response = "<b>[TASK BERHASIL DIPERBAHARUI]</b><br>"
-                    log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
-                    f.write(log)
-                    f.close()
-                else:
-                    f = open("test/logs.txt", "a+")
-                    response = "<b>[TIDAK ADA TASK DENGAN ID SESUAI]</b><br>"
-                    log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
-                    f.write(log)
-                    f.close()
-                
-            elif (selesaiFlag != -1):
-                for time in times:
-                    date = datetime.strptime(time, "%m/%d/%Y").date()
-                    for task in tasks[time]:
-                        if (i != nTask):
-                            tasksBody += task[0]+"---"+date.strftime("%m/%d/%Y")+"---"+task[1]+"---"+task[2]+"\n"
-                        i += 1
-                if (nTask >= 1 and nTask < i):
-                    f = open("test/tasks.txt", "w")
-                    f.write(tasksBody)
-                    f.close()
-
-                    f = open("test/logs.txt", "a+")
-                    response = "<b>[TASK BERHASIL DIHAPUS]</b><br>"
-                    log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
-                    f.write(log)
-                    f.close()
-                else:
-                    response = "<b>[TIDAK ADA TASK DENGAN ID SESUAI]</b><br>"
-                    log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
-                    f.write(log)
-                    f.close()
-
-        else:
-            f = open("test/logs.txt", "a+")
-            response = "<b>[ID TASK BUKAN MERUPAKAN ID YANG VALID]</b><br>"
-            log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
-            f.write(log)
-            f.close()
-        #read task number
-        #read tasks
-        #open file tasks.txt, write
-        #rewrite tasks except for task number n
-    
-    elif (kuisFlag != -1 or tubesFlag != -1 or tucilFlag != -1 or ujianFlag != -1 or praktikumFlag != -1):
-        o = p.objek(text)
-        m = p.matkul(o)
-        t = p.topik(o)
-        if kuisFlag != -1:
-            j = text[kuisFlag:kuisFlag+4].capitalize()
-        elif tubesFlag != -1:
-            j = text[tubesFlag:tubesFlag+5].capitalize()
-        elif tucilFlag != -1:
-            j = text[tucilFlag:tucilFlag+5].capitalize()
-        elif ujianFlag != -1:
-            j = text[ujianFlag:ujianFlag+5].capitalize()
-        else:
-            j = text[praktikumFlag:praktikumFlag+9].capitalize()
-        
-        #read, process tanggal
-        tp = p.tanggalPada(text)
-        date = p.toDateObj(tp)
-        
-        if (m == None or t == None or j == None or tp == None or date == None):
-            print("Bad command")
-            #error handling
-        else:
-            #write task, format "<Jenis>---<tanggal>---<matkul>---<topik>" dengan "---" sebagai separator karena kemungkinan kecil untuk menjadi input
-            task = j.capitalize()+"---"+date.strftime("%m/%d/%Y")+"---"+m+"---"+t.title()+"\n"
-        
-            f = open("test/tasks.txt", "a+")
-            f.write(task)
-            f.close()
-
-            f = open("test/logs.txt", "a+")
-            response = "<b>[TASK BERHASIL DICATAT]</b><br>"
-            response += responseBody()
-            log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
-            f.write(log)
-            f.close()
-    elif(sapaFlag != -1):
-        f = open("test/logs.txt", "a+")
-        response = "Halo! Bisa ceritakan masalahmu?"
-        log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
-        f.write(log)
-        f.close()
-    else:
-        f = open("test/logs.txt", "a+")
-        response = badPesanBody()
-        log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
-        f.write(log)
-        f.close()
-        
-def loadTasks():
-    #read data
-    f = open("test/tasks.txt", "r")
-    lines = f.readlines()
+    f = open("test/config.json", "w")
+    config = {'bidang': None, 'lastProcess': None, 'masalah': None, 'isMasalahSelesai': False}
+    f.write(json.dumps(config))
     f.close()
     
-    #gunakan dictionary, {<date1>: [<task1>, <task2>, ...], <date2>: [<task3>, <task4>, ...], ...}
-    tasks = {}
-    
-    for line in lines:
-        #abaikan newline
-        line = line.replace("\n", "")
-        #separator "---"
-        info = line.split("---")
-        if (info[1] in tasks.keys()):
-            #jika tanggal sudah di dictionary, tambahkan task ke values
-            tasks[info[1]].append([info[0], info[2], info[3]])
-        else:
-            #jika tidak, inisialisasi entri tanggal di dictionary dengan value = task kini
-            tasks[info[1]] = [[info[0], info[2], info[3]]]
-    
-    return tasks
-    
-def responseBody(mindate=None, maxdate=None, matkul=None, jenis=None):
-    body = ""
-    tasks = loadTasks()
-    
-    times = sorted(list(tasks.keys()))
-    i = 1
-    j = 1
-    for time in times:
-        date = datetime.strptime(time, "%m/%d/%Y").date()
-        validDate = True
-        if (mindate != None):
-            validDate = validDate and (date >= mindate)
-        if (maxdate != None):
-            validDate = validDate and (date <= maxdate)
-        
-        for task in tasks[time]:
-            validObj = True
-            if (matkul != None):
-                validObj = validObj and (matkul == task[1])
-            if (jenis != None):
-                if (jenis != "Tugas"):
-                    validObj = validObj and (jenis == task[0])
-                else:
-                    validObj = validObj and ((task[0] == "Tubes") or (task[0] == "Tucil"))
-            
-            if (validDate and validObj):
-                body += str(j)+". (ID: "+str(i)+") "+date.strftime("%d/%m/%Y")+" - "+task[1]+" - "+task[0]+" - "+task[2]+"<br>"
-                j += 1
-            i += 1
-            
-    return body
+    return render_template('mainpage.html')
 
-def helpBody():
-    body = ""
-    body += "<b>[FITUR]</b><br>"
-    body += "1. Mencatat task<br>"
-    body += "2. Melihat daftar task<br>"
-    body += "3. Menampilkan tanggal task dan deadline tugas<br>"
-    body += "4. Mengubah tanggal task<br>"
-    body += "5. Menghapus task dari daftar<br>"
-    body += "<br>"
-    body += "<b>[DAFTAR KATA PENTING]</b><br>"
-    body += "1. Kuis<br>"
-    body += "2. Ujian<br>"
-    body += "3. Tubes<br>"
-    body += "4. Tucil<br>"
-    body += "5. Praktikum<br>"
-    
-    return body
+@app.route('/displayKontakMentor')
+def displayKontakMentor():
+    f = open("test/logs.txt", "a+")
+    now = datetime.now()
 
-def badPesanBody():
-    body = "Maaf, bot tidak mengenal pesan itu. Bisa ceritakan masalahmu?"
+    #--- Database Call ---#
 
-    return body
-    
-  
+    with open('test/config.json') as g:
+        config = json.load(g)
+
+    response =  "Nama mentor  : Johann<br>"
+    response += "Keahlian     : "+config['bidang'].title()+"<br>"
+    response += "Link meeting : <a href=\"https://meet.google.com/yyz-hraf-cdk\">meet.google.com/yyz-hraf-cdk</a>"
+
+    #--- End ---#
+
+    log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
+    f.write(log)
+    f.close()
+
+    return redirect(url_for('chatPage'))
+
 @app.route('/Chat', methods = ['GET', 'POST'])
 def chatPage():
     f = open("test/logs.txt", "a")
@@ -383,6 +105,9 @@ def chatPage():
         elif type == "B":
             html += '            <tr><td><p class=\"botbubble\">'+message+'</p>'
             html += '<p class=\"bottime\">'+date_time_obj.time().isoformat(timespec='minutes')+'</p></td></tr>\n'
+
+            if (message == "Bila ada kendala, kamu bisa langsung menghubungi salah satu mentor kami dengan menekan tombol di bawah ini"):
+                html += displayHubungiMentorButton()
     
     html += '        </table>\n'
     html += '    </div>\n'
@@ -391,13 +116,271 @@ def chatPage():
     html += '            <input type=\"text\" name=\"messageInput\" id=\"message\" placeholder=\"Type your message...\" autocomplete="off">\n'
     html += '            <input type=\"submit\" id=\"send\" name=\"sendButton\" value=\"send\">\n'
     html += '        </div>\n'
-    html += '        </form>\n'
+    html += '    </form>\n'
     html += '    </body>\n'
     html += '</html>'
     with open("src/templates/chat.html", "w", encoding="utf8") as file:
         file.write(html)
     
     return html #render_template('chat.html')
+
+#--- Text Processing ---#
+
+def processInput(text):
+    #ignore trailing/leading whitespace
+    text = text.strip()
+    #check kata-kata kunci setiap command menggunakan algoritma boyer-moore untuk exact string matching
+    #algoritma mengembalikan -1 jika tidak ditemukan, jika ditemukan mengembalikan indeks mulai substring
+    textl = text.lower()
+    bidangFlag = p.bm(textl, "bidang")
+    sapaFlag = max(p.bm(textl, "halo"), p.bm(textl, "hai"), p.exactmatch(textl, "hi"), p.bm(textl, "hei"), p.bm(textl, "hey"), p.bm(textl, "hello"), p.bm(textl, "hallo"))
+    terimakasihFlag = max(p.bm(textl, "terima kasih"), p.bm(textl, "terimakasih"), p.bm(textl, "thanks"), p.bm(textl, "tks"), p.bm(textl, "makasih"), p.bm(textl, "tq"), p.bm(textl, "thank you"))
+    exitFlag = max(p.bm(textl, "exit"), p.bm(textl, "keluar"), p.bm(textl, "cancel"))
+
+    now = datetime.now()
+
+    f = open("test/logs.txt", "r")
+    chatLogs = f.readlines()
+    for line in chatLogs:
+        type = line[0]
+        if type == "U":
+            lastBotMessage = line[20:-1]
+    
+    with open('test/config.json') as f:
+        config = json.load(f)
+    
+    if (config['lastProcess'] == "request-elaborasi-masalah" and config['masalah'] == "ads"):
+        return handleAdsMasalah(now, textl, config, exitFlag)
+    
+    #jika bukan sambungan dari previous process
+    if (bidangFlag) != -1:
+        bidang = p.extractBidang(textl, bidangFlag)
+        if (bidang == None):
+            f = open("test/logs.txt", "a+")
+            response = "Maaf, kami tidak bisa mendeteksi bidang perusahaan kamu. Silahkan jelaskan kembali masalah kamu dengan penjabaran \"perusahaan saya di bidang X\"."
+            log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
+            f.write(log)
+            f.close()
+        else:
+            config['bidang'] = bidang
+            
+            handleAdsMasalah(now, textl, config, exitFlag)
+    elif(sapaFlag != -1):
+        f = open("test/logs.txt", "a+")
+        response = "Halo! Bisa ceritakan masalahmu?"
+        log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
+        f.write(log)
+        f.close()
+    elif(terimakasihFlag != -1):
+        f = open("test/logs.txt", "a+")
+        response = "Sama-sama! Apakah ada hal lain yang bisa bot bantu?"
+        log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
+        f.write(log)
+        f.close()
+    else:
+        f = open("test/logs.txt", "a+")
+        response = badPesanBody()
+        log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
+        f.write(log)
+        f.close()
+        
+def loadTasks():
+    #read data
+    f = open("test/tasks.txt", "r")
+    lines = f.readlines()
+    f.close()
+    
+    #gunakan dictionary, {<date1>: [<task1>, <task2>, ...], <date2>: [<task3>, <task4>, ...], ...}
+    tasks = {}
+    
+    for line in lines:
+        #abaikan newline
+        line = line.replace("\n", "")
+        #separator "---"
+        info = line.split("---")
+        if (info[1] in tasks.keys()):
+            #jika tanggal sudah di dictionary, tambahkan task ke values
+            tasks[info[1]].append([info[0], info[2], info[3]])
+        else:
+            #jika tidak, inisialisasi entri tanggal di dictionary dengan value = task kini
+            tasks[info[1]] = [[info[0], info[2], info[3]]]
+    
+    return tasks
+
+
+def handleAdsMasalah(now, textl, config, exitFlag):
+    #--- INI NANTI AMBIL DARI DATABASE ---#
+
+    keywords_level2_list = ["instagram", "ig", "facebook", "fb", "google", "adsense"]
+
+    #--- END ---#
+
+    keywords = p.findKeywords(textl, config['bidang'], keywords_level2_list)
+    if (p.keywordsIntersect(keywords, ["instagram", " ig"])):
+        config['lastProcess'] = "jawab-masalah"
+        config['masalah'] = "instagram ads"
+        config['isMasalahSelesai'] = True
+        
+        f = open("test/config.json", "w")
+        f.write(json.dumps(config))
+        f.close()
+
+        #--- DATABASE CALL ---#
+        response = "<b>Cara memasang ads di Instagram:</b><br>"
+        response += "1. Buat Fanpage di Facebook<br>"
+        response += "2. Pilih Create Ads<br>"
+        response += "3. Pilih tujuan beriklan<br>"
+        response += "4. Tentukan target audiens dan anggaran<br>"
+        response += "5. Format iklan"
+        #--- END ---#
+
+        f = open("test/logs.txt", "a+")
+        log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
+        f.write(log)
+        f.close()
+
+        responFollowUpMentor()
+    elif (p.keywordsIntersect(keywords, ["facebook", "fb"])):
+        config['lastProcess'] = "jawab-masalah"
+        config['masalah'] = "facebook ads"
+        config['isMasalahSelesai'] = True
+
+        f = open("test/config.json", "w")
+        f.write(json.dumps(config))
+        f.close()
+        
+        #--- DATABASE CALL ---#
+        response = "STEPS FOR FB ADS"
+        #--- END ---#
+
+        f = open("test/logs.txt", "a+")
+        log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
+        f.write(log)
+        f.close()
+
+        responFollowUpMentor()
+    elif (p.keywordsIntersect(keywords, ["google", "adsense"])):
+        config['lastProcess'] = "jawab-masalah"
+        config['masalah'] = "google ads"
+        config['isMasalahSelesai'] = True
+
+        f = open("test/config.json", "w")
+        f.write(json.dumps(config))
+        f.close()
+
+        #--- DATABASE CALL ---#
+        response = "STEPS FOR GOOGLE ADS"
+        #--- END ---#
+        
+        f = open("test/logs.txt", "a+")
+        log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
+        f.write(log)
+        f.close()
+
+        responFollowUpMentor()
+    else:
+        if (exitFlag != -1):
+            config['lastProcess'] = "jawab-masalah"
+
+            f = open("test/logs.txt", "a+")
+            response = "Halo! Bisa ceritakan masalahmu?"
+            log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
+            f.write(log)
+            f.close()
+        
+        f = open("test/logs.txt", "a+")
+        response = "Kamu ingin memasang advertisement dari penyedia iklan apa? (Instagram/Facebook/Google)"
+        log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
+        f.write(log)
+        f.close()
+
+        config['lastProcess'] = "request-elaborasi-masalah"
+        config['masalah'] = "ads"
+        config['isMasalahSelesai'] = False
+        
+        f = open("test/config.json", "w")
+        f.write(json.dumps(config))
+        f.close()
+
+def responFollowUpMentor():
+    now = datetime.now()
+
+    f = open("test/logs.txt", "a+")
+    response = "Bila ada kendala, kamu bisa langsung menghubungi salah satu mentor kami dengan menekan tombol di bawah ini"
+    log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
+    f.write(log)
+    f.close()
+
+    with open('test/config.json') as f:
+        config = json.load(f)
+    
+    config['lastProcess'] = "tawar-bantuan-mentor"
+    f = open("test/config.json", "w")
+    f.write(json.dumps(config))
+    f.close()
+
+def displayHubungiMentorButton():
+    button = '<a href=\"http://localhost:5000/displayKontakMentor\" id=hubmentorbutton class=\"hubungi-mentor-button\"><b><i>Hubungi Mentor</i></b></a>'
+    html = '            <tr><td><form>'+button+'</form></td></tr>\n'
+    return html
+
+def responseBody(mindate=None, maxdate=None, matkul=None, jenis=None):
+    body = ""
+    tasks = loadTasks()
+    
+    times = sorted(list(tasks.keys()))
+    i = 1
+    j = 1
+    for time in times:
+        date = datetime.strptime(time, "%m/%d/%Y").date()
+        validDate = True
+        if (mindate != None):
+            validDate = validDate and (date >= mindate)
+        if (maxdate != None):
+            validDate = validDate and (date <= maxdate)
+        
+        for task in tasks[time]:
+            validObj = True
+            if (matkul != None):
+                validObj = validObj and (matkul == task[1])
+            if (jenis != None):
+                if (jenis != "Tugas"):
+                    validObj = validObj and (jenis == task[0])
+                else:
+                    validObj = validObj and ((task[0] == "Tubes") or (task[0] == "Tucil"))
+            
+            if (validDate and validObj):
+                body += str(j)+". (ID: "+str(i)+") "+date.strftime("%d/%m/%Y")+" - "+task[1]+" - "+task[0]+" - "+task[2]+"<br>"
+                j += 1
+            i += 1
+            
+    return body
+
+def helpBody():
+    body = ""
+    body += "<b>[FITUR]</b><br>"
+    body += "1. Mencatat task<br>"
+    body += "2. Melihat daftar task<br>"
+    body += "3. Menampilkan tanggal task dan deadline tugas<br>"
+    body += "4. Mengubah tanggal task<br>"
+    body += "5. Menghapus task dari daftar<br>"
+    body += "<br>"
+    body += "<b>[DAFTAR KATA PENTING]</b><br>"
+    body += "1. Kuis<br>"
+    body += "2. Ujian<br>"
+    body += "3. Tubes<br>"
+    body += "4. Tucil<br>"
+    body += "5. Praktikum<br>"
+    
+    return body
+
+def badPesanBody():
+    body = "Maaf, bot tidak mengenal pesan itu. Bisa ceritakan masalahmu?"
+
+    return body
+
+
+#--- Main ---#
 
 if __name__ == '__main__':
     app.run()
