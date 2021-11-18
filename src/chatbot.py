@@ -1,10 +1,10 @@
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 import msgParser as p
-from flask import Flask, render_template, flash, request, url_for, redirect
+from flask import Flask, render_template, request, url_for, redirect, make_response
 from werkzeug.utils import secure_filename
-import levenshtein as l
 import json
+import time
 
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -47,21 +47,41 @@ def displayKontakMentor():
     f.write(log)
     f.close()
 
+    time.sleep(0.5)
     return redirect(url_for('chatPage'))
 
 @app.route('/Chat', methods = ['GET', 'POST'])
 def chatPage():
-    f = open("test/logs.txt", "a")
-    
     if request.method == "POST":
         msg = request.form.get("messageInput").lstrip()
         if (msg.count(" ") < len(msg)):
+            f = open("test/logs.txt", "a")
             now = datetime.now()
             log = "U"+now.strftime("%m/%d/%Y %H:%M:%S")+msg+"\n"
             f.write(log)
             f.close()
+
+            html = generateChatContent()
+
+            with open("src/templates/chat.html", "w", encoding="utf8") as file:
+                file.write(html)
+            
             processInput(msg)
+            resp = make_response(render_template('chat.html'))
+            resp.headers['Refresh'] = '0.8'
+            return resp
     
+    time.sleep(0.5)
+    html = generateChatContent()
+
+    with open("src/templates/chat.html", "w", encoding="utf8") as file:
+        file.write(html)
+    
+    return html #render_template('chat.html')
+
+#--- Text Processing ---#
+
+def generateChatContent():
     f = open("test/logs.txt", "r")
     chatLogs = f.readlines()
     
@@ -76,9 +96,10 @@ def chatPage():
     html += '    <div class=\"header\">\n'
     html += '        <table class=\"headergrid\" cellspacing=0 cellpadding=0>\n'
     html += '            <tr><td class=\"avatarimg\"><img class=\"avatar\" src=\"static/avatar.png\"></td>\n'
-    html += '            <td><p class=\"botname\"><a class=\"botlink\" href=\"http://127.0.0.1:5000/Chat\"><b>Pilihmentor Bot</b></a></p></td></tr>\n'    
+    html += '            <td><p class=\"botname\"><a class=\"botlink\" href=\"http://localhost:5000/Chat\"><b>Pilihmentor Bot</b></a></p></td></tr>\n'    
     html += '        </table>\n'
     html += '    </div>\n'
+    html += '    <div class=\"chatarea\">\n'
     html += '    <div class=\"chatscroll\">\n'
     html += '        <table class=\"chat\">\n'
     
@@ -108,23 +129,21 @@ def chatPage():
 
             if (message == "Bila ada kendala, kamu bisa langsung menghubungi salah satu mentor kami dengan menekan tombol di bawah ini"):
                 html += displayHubungiMentorButton()
+    f.close()
     
     html += '        </table>\n'
     html += '    </div>\n'
-    html += '    <form action=\"http://127.0.0.1:5000/Chat\" method=POST>\n'
+    html += '    <form action=\"http://localhost:5000/Chat\" method=POST>\n'
     html += '        <div class=\"messageBox\">\n'
     html += '            <input type=\"text\" name=\"messageInput\" id=\"message\" placeholder=\"Type your message...\" autocomplete="off">\n'
     html += '            <input type=\"submit\" id=\"send\" name=\"sendButton\" value=\"send\">\n'
     html += '        </div>\n'
     html += '    </form>\n'
+    html += '    </div>\n'
     html += '    </body>\n'
     html += '</html>'
-    with open("src/templates/chat.html", "w", encoding="utf8") as file:
-        file.write(html)
-    
-    return html #render_template('chat.html')
 
-#--- Text Processing ---#
+    return html
 
 def processInput(text):
     #ignore trailing/leading whitespace
@@ -323,56 +342,6 @@ def displayHubungiMentorButton():
     button = '<a href=\"http://localhost:5000/displayKontakMentor\" id=hubmentorbutton class=\"hubungi-mentor-button\"><b><i>Hubungi Mentor</i></b></a>'
     html = '            <tr><td><form>'+button+'</form></td></tr>\n'
     return html
-
-def responseBody(mindate=None, maxdate=None, matkul=None, jenis=None):
-    body = ""
-    tasks = loadTasks()
-    
-    times = sorted(list(tasks.keys()))
-    i = 1
-    j = 1
-    for time in times:
-        date = datetime.strptime(time, "%m/%d/%Y").date()
-        validDate = True
-        if (mindate != None):
-            validDate = validDate and (date >= mindate)
-        if (maxdate != None):
-            validDate = validDate and (date <= maxdate)
-        
-        for task in tasks[time]:
-            validObj = True
-            if (matkul != None):
-                validObj = validObj and (matkul == task[1])
-            if (jenis != None):
-                if (jenis != "Tugas"):
-                    validObj = validObj and (jenis == task[0])
-                else:
-                    validObj = validObj and ((task[0] == "Tubes") or (task[0] == "Tucil"))
-            
-            if (validDate and validObj):
-                body += str(j)+". (ID: "+str(i)+") "+date.strftime("%d/%m/%Y")+" - "+task[1]+" - "+task[0]+" - "+task[2]+"<br>"
-                j += 1
-            i += 1
-            
-    return body
-
-def helpBody():
-    body = ""
-    body += "<b>[FITUR]</b><br>"
-    body += "1. Mencatat task<br>"
-    body += "2. Melihat daftar task<br>"
-    body += "3. Menampilkan tanggal task dan deadline tugas<br>"
-    body += "4. Mengubah tanggal task<br>"
-    body += "5. Menghapus task dari daftar<br>"
-    body += "<br>"
-    body += "<b>[DAFTAR KATA PENTING]</b><br>"
-    body += "1. Kuis<br>"
-    body += "2. Ujian<br>"
-    body += "3. Tubes<br>"
-    body += "4. Tucil<br>"
-    body += "5. Praktikum<br>"
-    
-    return body
 
 def badPesanBody():
     body = "Maaf, bot tidak mengenal pesan itu. Bisa ceritakan masalahmu?"
