@@ -18,83 +18,6 @@ def mainPage():
     f.close()
     return render_template('mainpage.html')
 
-def badPesan(text):
-    a = [text.split()]
-    b = ['deadline', 'tugas', 'kuis', 'kapan', 'tubes', 'tucil', 'ujian', 'praktikum']
-    m = len(a[0])
-    n = len(b)
-
-    #print (m)
-    #print (n)
-    
-    bb = [[0 for i in range (0, m)] for i in range (0, n)]
-    #print (a)
-    r = [0 for i in range (n)]
-    
-    for i in range (m):
-        #a[i] = calcDictDistance(a[i], 1)
-        for j in range (n):
-            bb[j][i] = l.levenshteinDistanceDP(a[0][i], b[j])
-            #print (bb[j][i])
-        
-    for i in range (n):
-        k = 0
-        while k < m :
-            #print ("...")
-            #print (bb[i][k])
-            #print (bb[i][r[i]])
-            if (bb[i][k]<bb[i][r[i]]):
-                r[i] = k
-            #print (r[i])
-            k+=1
-        #print ("ok")
-    #print (bb)
-    #print (r)
-    #print (b3)
-
-    x = []
-    for i in range (n):
-        x.append(bb[i][r[i]])
-    idxb = 0
-    #print (x)
-    
-    i = 0
-    #print (min(x))
-    minx = x[0]  
-    for num in x:
-        if num != 0 :
-            if num < minx:
-              minx = num
-    while i < len(x) :
-        if x[i] == minx:
-            idxb = i
-            break
-        i += 1
-    #print (b[idxb])
-    
-    done = 0
-    while done < m:
-        print (done)
-        if (bb[idxb][done] == minx) :
-            a[0][done] = b[idxb]
-            done = 99
-        done+=1
-
-    if (minx < 4):
-        response =  "Mungkin maksud anda :"
-        a0 = text.split()
-        for i in range(len(a0)):
-            response += " "
-            if (a0[i] != a[0][i]):
-                response += "<b>"+a[0][i]+"</b>"
-            else:
-                response += a0[i]
-    else :
-        response = "Maaf, pesan tidak dikenali"
-
-    #response = "Maaf, pesan tidak dikenali"
-    return response
-
 def processInput(text):
     #ignore trailing/leading whitespace
     text = text.strip()
@@ -112,6 +35,8 @@ def processInput(text):
     undurFlag = max(p.bm(text, "undur"), p.bm(text, "Undur"))
     selesaiFlag = max(p.bm(text, "selesai"), p.bm(text, "Selesai"), p.bm(text, "menyelesaikan"), p.bm(text, "Menyelesaikan"))
     bisaFlag = max(p.bm(text, " bisa "), p.bm(text, "Bisa "))
+    
+    sapaFlag = max(p.bm(text, "halo"), p.bm(text, "Halo"), p.bm(text, "hai"), p.bm(text, "Hai"), p.exactmatch(text, "hi"), p.exactmatch(text, "Hi"), p.bm(text, "hei"), p.bm(text, "Hei"), p.bm(text, "hei"), p.bm(text, "Hei"))
 
     now = datetime.now()
     
@@ -184,7 +109,7 @@ def processInput(text):
                 else:
                     response = "Tidak ada"
             else:
-                badPesan
+                response = badPesanBody()
             log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
             f.write(log)
             f.close()
@@ -196,7 +121,7 @@ def processInput(text):
             f.close()
         else:
             #error handling
-            response = badPesan(text)
+            response = badPesanBody(text)
     
     elif (undurFlag != -1 or selesaiFlag != -1):
         nTask = p.task(text)
@@ -310,8 +235,18 @@ def processInput(text):
             log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
             f.write(log)
             f.close()
+    elif(sapaFlag != -1):
+        f = open("test/logs.txt", "a+")
+        response = "Halo! Bisa ceritakan masalahmu?"
+        log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
+        f.write(log)
+        f.close()
     else:
-        response = "Maaf pesan tidak dikenali"    
+        f = open("test/logs.txt", "a+")
+        response = badPesanBody()
+        log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
+        f.write(log)
+        f.close()
         
 def loadTasks():
     #read data
@@ -384,6 +319,11 @@ def helpBody():
     body += "4. Tucil<br>"
     body += "5. Praktikum<br>"
     
+    return body
+
+def badPesanBody():
+    body = "Maaf, bot tidak mengenal pesan itu. Bisa ceritakan masalahmu?"
+
     return body
     
   

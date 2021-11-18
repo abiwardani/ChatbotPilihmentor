@@ -14,6 +14,9 @@ def bm(text, pattern):
     i = lenP-1
     j = lenP-1
     found = False
+
+    if (lenT < lenP):
+        return -1
     
     while (i < lenT and not found):
         j = lenP-1
@@ -55,6 +58,12 @@ def bm(text, pattern):
     #print("Loc:", i)
     
     return i
+
+def exactmatch(text, pattern):
+    if (text == pattern):
+        return 0
+    else:
+        return -1
 
 def objek(text):
     try:
