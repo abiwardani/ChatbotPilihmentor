@@ -91,14 +91,23 @@ def generateChatContent():
     html += '    <head>\n'
     html += '        <title>Pilihmentor</title>\n'
     html += '        <link rel=\"stylesheet\" href=\"static/styles/chatbotstyles.css\">'
+    html += '        <link rel=\"stylesheet\" href=\"static/styles/headerstyles.css\">'
     html += '    </head>\n'
     html += '    <body>\n'
-    html += '    <div class=\"header\">\n'
-    html += '        <table class=\"headergrid\" cellspacing=0 cellpadding=0>\n'
-    html += '            <tr><td class=\"avatarimg\"><img class=\"avatar\" src=\"static/avatar.png\"></td>\n'
-    html += '            <td><p class=\"botname\"><a class=\"botlink\" href=\"http://localhost:5000/Chat\"><b>Pilihmentor Bot</b></a></p></td></tr>\n'    
-    html += '        </table>\n'
-    html += '    </div>\n'
+    html += '    <div class=\"header\">'
+    html += '        <div class=\"header-box\">'
+    html += '            <table class=\"header-table\">'
+    html += '                <tr>'
+    html += '                    <td>'
+    html += '                        <a class=\"header-text\" href=\"http://localhost:5000/\"><img class=\"header-logo\" src=\"https://pilihmentor.com/wp-content/uploads/2021/10/logo.png\" alt=\"Pilihmentor.com\"></a>'
+    html += '                    </td>'
+    html += '                    <td>'
+    html += '                        <a class="register-button" href="#">Register</a>'
+    html += '                    </td>'
+    html += '                </tr>'
+    html += '            </table>'
+    html += '        </div>'
+    html += '    </div>'
     html += '    <div class=\"chatarea\">\n'
     html += '    <div class=\"chatscroll\">\n'
     html += '        <table class=\"chat\">\n'
@@ -135,7 +144,7 @@ def generateChatContent():
     html += '    </div>\n'
     html += '    <form action=\"http://localhost:5000/Chat\" method=POST>\n'
     html += '        <div class=\"messageBox\">\n'
-    html += '            <input type=\"text\" name=\"messageInput\" id=\"message\" placeholder=\"Type your message...\" autocomplete="off">\n'
+    html += '            <input type=\"text\" name=\"messageInput\" id=\"message\" placeholder=\"Tulis pesan kamu di sini...\" autocomplete="off">\n'
     html += '            <input type=\"submit\" id=\"send\" name=\"sendButton\" value=\"send\">\n'
     html += '        </div>\n'
     html += '    </form>\n'
@@ -182,8 +191,26 @@ def processInput(text):
             f.close()
         else:
             config['bidang'] = bidang
+
+            #--- INI NANTI AMBIL DARI DATABASE ---#
+
+            keywords_list = ["instagram", " ig", "facebook", " fb", "google", "adsense", " ads", "iklan", "advertisement", " ad", "hire", "programmer", "ari orang", "stakeholder", "modal", "capital", "invest"]
+            keywords_ads = ["instagram", " ig", "facebook", " fb", "google", "adsense", " ads", "iklan", "advertisement", " ad"]
+            keywords_hire = ["hire", "ari orang"]
+            keywords_modal = ["modal", "capital", "stakeholder", "invest"]
+
+            #--- END ---#
             
-            handleAdsMasalah(now, textl, config, exitFlag)
+            keywords = p.findKeywords(textl, config['bidang'], keywords_list)
+            if (p.keywordsIntersect(keywords, keywords_ads)):
+                handleAdsMasalah(now, textl, config, exitFlag)
+            elif (p.keywordsIntersect(keywords, keywords_hire)):
+                handleHireMasalah(now, textl, config, exitFlag)
+            elif (p.keywordsIntersect(keywords, keywords_modal)):
+                handleModalMasalah(now, textl, config, exitFlag)
+            else:
+                handleUnknownMasalah(textl, config)
+
     elif(sapaFlag != -1):
         f = open("test/logs.txt", "a+")
         response = "Halo! Bisa ceritakan masalahmu?"
@@ -320,6 +347,83 @@ def handleAdsMasalah(now, textl, config, exitFlag):
         f = open("test/config.json", "w")
         f.write(json.dumps(config))
         f.close()
+
+def handleHireMasalah(now, textl, config, exitFlag):
+    #--- INI NANTI AMBIL DARI DATABASE ---#
+
+    keywords_level2_list = ["programmer"]
+
+    #--- END ---#
+
+    keywords = p.findKeywords(textl, config['bidang'], keywords_level2_list)
+    if (p.keywordsIntersect(keywords, ["programmer"])):
+        config['lastProcess'] = "jawab-masalah"
+        config['masalah'] = "hire programmer"
+        config['isMasalahSelesai'] = True
+
+        f = open("test/config.json", "w")
+        f.write(json.dumps(config))
+        f.close()
+
+        #--- DATABASE CALL ---#
+        response = "<b>STEPS FOR HIRE PROGRAMMER<b>"
+        #--- END ---#
+
+        f = open("test/logs.txt", "a+")
+        log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
+        f.write(log)
+        f.close()
+
+        responFollowUpMentor()
+    else:
+        config['masalah'] = "sumber daya manusia"
+
+        handleUnknownMasalah(textl, config)
+    
+def handleModalMasalah(now, textl, config, exitFlag):
+    #--- INI NANTI AMBIL DARI DATABASE ---#
+
+    keywords_level2_list = ["invest"]
+
+    #--- END ---#
+
+    keywords = p.findKeywords(textl, config['bidang'], keywords_level2_list)
+    if (p.keywordsIntersect(keywords, ["invest"])):
+        config['lastProcess'] = "jawab-masalah"
+        config['masalah'] = "cari investor"
+        config['isMasalahSelesai'] = True
+
+        f = open("test/config.json", "w")
+        f.write(json.dumps(config))
+        f.close()
+
+        #--- DATABASE CALL ---#
+        response = "<b>STEPS FOR CARI INVESTOR<b>"
+        #--- END ---#
+
+        f = open("test/logs.txt", "a+")
+        log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
+        f.write(log)
+        f.close()
+
+        responFollowUpMentor()
+    else:
+        config['masalah'] = "modal"
+        handleUnknownMasalah(textl, config)
+
+def handleUnknownMasalah(textl, config):
+    now = datetime.now()
+
+    f = open("test/logs.txt", "a+")
+    response = "Bot belum bisa membantu masalahmu saat ini, silahkan hubungi mentor dengan menekan tombol di bawah ini"
+    log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
+    f.write(log)
+    f.close()
+    
+    config['lastProcess'] = "solusi-tidak-ditemukan"
+    f = open("test/config.json", "w")
+    f.write(json.dumps(config))
+    f.close()
 
 def responFollowUpMentor():
     now = datetime.now()

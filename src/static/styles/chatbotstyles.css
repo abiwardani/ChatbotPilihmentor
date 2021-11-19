@@ -13,12 +13,6 @@ a.botlink {
     text-decoration: none;
 }
 
-div.header {
-    height: 70px;
-    width: 100%;
-    background-color: #afc0db;
-}
-
 div.chatarea {
     width: 800px;
     margin: auto;
@@ -26,7 +20,7 @@ div.chatarea {
 
 div.chatscroll {
     overflow-y: auto;
-    border: 1px solid black;
+    border: none;
     border-radius: 12px;
     height: 500px;
     width: 800px;
@@ -34,23 +28,7 @@ div.chatscroll {
     padding: 5px;
     display: flex;
     flex-direction: column-reverse;
-}
-
-table.headergrid {
-    width: 400px;
-}
-
-td.avatarimg {
-    width: 60px;
-    padding: 10px;
-}
-
-img.avatar {
-    vertical-align: middle;
-    border-radius: 50%;
-    height: 50px;
-    width: 50px;
-    background-color: #ffffff;
+    background-color: #b5c1fa;
 }
 
 table.chat {

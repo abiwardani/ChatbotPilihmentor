@@ -2,24 +2,25 @@
 <html>
     <head>
         <title>Pilihmentor</title>
-        <link rel="stylesheet" href="static/styles/chatbotstyles.css">    </head>
+        <link rel="stylesheet" href="static/styles/chatbotstyles.css">        <link rel="stylesheet" href="static/styles/headerstyles.css">    </head>
     <body>
-    <div class="header">
-        <table class="headergrid" cellspacing=0 cellpadding=0>
-            <tr><td class="avatarimg"><img class="avatar" src="static/avatar.png"></td>
-            <td><p class="botname"><a class="botlink" href="http://localhost:5000/Chat"><b>Pilihmentor Bot</b></a></p></td></tr>
-        </table>
-    </div>
-    <div class="chatarea">
+    <div class="header">        <div class="header-box">            <table class="header-table">                <tr>                    <td>                        <a class="header-text" href="http://localhost:5000/"><img class="header-logo" src="https://pilihmentor.com/wp-content/uploads/2021/10/logo.png" alt="Pilihmentor.com"></a>                    </td>                    <td>                        <a class="register-button" href="#">Register</a>                    </td>                </tr>            </table>        </div>    </div>    <div class="chatarea">
     <div class="chatscroll">
         <table class="chat">
             <tr><td><p class="datebubble">Today</p></td></tr>
-            <tr><td><p class="botbubble">Halo! Bisa ceritakan masalahmu?</p><p class="bottime">15:21</p></td></tr>
+            <tr><td><p class="botbubble">Halo! Bisa ceritakan masalahmu?</p><p class="bottime">16:53</p></td></tr>
+            <tr><td><p class="userbubble">Halo! Aku punya bisnis di bidang fashion, kita mau bikin apps mobile tapi gatau dimana bisa hire programmer yang berkualitas. Kira2 gimana ya?</p><p class="usertime">16:53</p></td></tr>
+            <tr><td><p class="botbubble"><b>STEPS FOR HIRE PROGRAMMER<b></p><p class="bottime">16:53</p></td></tr>
+            <tr><td><p class="botbubble">Bila ada kendala, kamu bisa langsung menghubungi salah satu mentor kami dengan menekan tombol di bawah ini</p><p class="bottime">16:53</p></td></tr>
+            <tr><td><form><a href="http://localhost:5000/displayKontakMentor" id=hubmentorbutton class="hubungi-mentor-button"><b><i>Hubungi Mentor</i></b></a></form></td></tr>
+            <tr><td><p class="userbubble">Nice thanks</p><p class="usertime">16:53</p></td></tr>
+            <tr><td><p class="botbubble">Sama-sama! Apakah ada hal lain yang bisa bot bantu?</p><p class="bottime">16:53</p></td></tr>
+            <tr><td><p class="botbubble">Nama mentor  : Johann<br>Keahlian     : Fashion<br>Link meeting : <a href="https://meet.google.com/yyz-hraf-cdk" class="meeting-link" target="_blank">meet.google.com/yyz-hraf-cdk</a></p><p class="bottime">16:54</p></td></tr>
         </table>
     </div>
     <form action="http://localhost:5000/Chat" method=POST>
         <div class="messageBox">
-            <input type="text" name="messageInput" id="message" placeholder="Type your message..." autocomplete="off">
+            <input type="text" name="messageInput" id="message" placeholder="Tulis pesan kamu di sini..." autocomplete="off">
             <input type="submit" id="send" name="sendButton" value="send">
         </div>
     </form>
