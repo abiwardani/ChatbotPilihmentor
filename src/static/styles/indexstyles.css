@@ -57,3 +57,8 @@ body, html {
     color: #000000;
     background-color: #f3e527;
 }
+
+.chat-button:hover {
+    background-color: #f5ed87;
+    cursor: pointer;
+}

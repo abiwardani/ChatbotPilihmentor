@@ -102,7 +102,7 @@ p.usertime {
 }
 
 div.messageBox {
-    width: 800px;
+    width: 810px;
 }
 
 a.hubungi-mentor-button {
@@ -135,5 +135,14 @@ a.meeting-link, a.meeting-link:visited {
 
 #send {
     float: right;
-    padding: 5px;
+    padding: 7px 10px;
+    border-radius: 14px;
+    border: none;
+    background-color: #343DAC;
+    color: #ffffff;
+}
+
+#send:hover {
+    background-color: #535cce;
+    cursor: pointer;
 }

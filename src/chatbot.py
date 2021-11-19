@@ -14,15 +14,15 @@ app.config['TEMPLATES_AUTO_RELOAD'] = True
 @app.route('/')
 def indexPage():
     f = open("test/logs.txt", "w")
-    message = "Halo! Bisa ceritakan masalahmu?"
+    message = "Halo! Ketik nama kamu untuk memulai percakapan"
     now = datetime.now()
     log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+message+"\n"
     f.write(log)
     f.close()
 
-    f = open("test/config.json", "w")
-    config = {'bidang': None, 'lastProcess': None, 'masalah': None, 'isMasalahSelesai': False}
-    f.write(json.dumps(config))
+    f = open("test/status.json", "w")
+    status = {'nama': None, 'waktu': now.strftime("%m/%d/%Y %H:%M:%S"), 'bidang': None, 'lastProcess': 'login', 'masalah': None, 'isMasalahSelesai': False, 'assignedMentor': None}
+    f.write(json.dumps(status))
     f.close()
     
     return render_template('index.html')
@@ -34,17 +34,28 @@ def displayKontakMentor():
 
     #--- Database Call ---#
 
-    with open('test/config.json') as g:
-        config = json.load(g)
+    with open('test/status.json') as g:
+        status = json.load(g)
 
-    response =  "Nama mentor  : Johann<br>"
-    response += "Keahlian     : "+config['bidang'].title()+"<br>"
-    response += "Link meeting : <a href=\"https://meet.google.com/yyz-hraf-cdk\" class=\"meeting-link\" target=\"_blank\">meet.google.com/yyz-hraf-cdk</a>"
+    namaMentor = "Johann"
+    bidangMentor = status['bidang'].title()
+    linkMeeting = "https://meet.google.com/yyz-hraf-cdk"
 
     #--- End ---#
 
+    response =  "Nama mentor  : "+namaMentor+"<br>"
+    response += "Keahlian     : "+bidangMentor+"<br>"
+    response += "Link meeting : <a href=\""+linkMeeting+"\" class=\"meeting-link\" target=\"_blank\">"+linkMeeting[8::]+"</a>"
+
+    status['assignedMentor'] = "Johann"
+    status['waktu'] = now.strftime("%m/%d/%Y %H:%M:%S")
+
     log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
     f.write(log)
+    f.close()
+
+    f = open("test/status.json", "w")
+    f.write(json.dumps(status))
     f.close()
 
     time.sleep(0.5)
@@ -72,12 +83,27 @@ def chatPage():
             return resp
     
     time.sleep(0.5)
+    checkLog()
+
     html = generateChatContent()
 
     with open("src/templates/chat.html", "w", encoding="utf8") as file:
         file.write(html)
     
-    return html #render_template('chat.html')
+    resp = make_response(render_template('chat.html'))
+    resp.headers['Refresh'] = '15'
+    return resp
+
+@app.route('/Rekap')
+def rekapPage():
+    html = generateRekapContent()
+
+    with open("src/templates/chat.html", "w", encoding="utf8") as file:
+        file.write(html)
+    
+    resp = make_response(render_template('chat.html'))
+    return resp
+
 
 #--- Text Processing ---#
 
@@ -145,10 +171,70 @@ def generateChatContent():
     html += '    <form action=\"http://localhost:5000/Chat\" method=POST>\n'
     html += '        <div class=\"messageBox\">\n'
     html += '            <input type=\"text\" name=\"messageInput\" id=\"message\" placeholder=\"Tulis pesan kamu di sini...\" autocomplete="off">\n'
-    html += '            <input type=\"submit\" id=\"send\" name=\"sendButton\" value=\"send\">\n'
+    html += '            <input type=\"submit\" id=\"send\" name=\"sendButton\" value=\"Kirim\">\n'
     html += '        </div>\n'
     html += '    </form>\n'
     html += '    </div>\n'
+    html += '    </body>\n'
+    html += '</html>'
+
+    return html
+
+def generateRekapContent():
+    with open('test/rekap.json') as f:
+        rekap = json.load(f)
+    
+    html = ''
+    html += '<!DOCTYPE html>\n'
+    html += '<html>\n'
+    html += '    <head>\n'
+    html += '        <title>Pilihmentor</title>\n'
+    html += '        <link rel=\"stylesheet\" href=\"static/styles/rekapstyles.css\">'
+    html += '        <link rel=\"stylesheet\" href=\"static/styles/headerstyles.css\">'
+    html += '    </head>\n'
+    html += '    <body>\n'
+    html += '    <div class=\"header\">'
+    html += '        <div class=\"header-box\">'
+    html += '            <table class=\"header-table\">'
+    html += '                <tr>'
+    html += '                    <td>'
+    html += '                        <a class=\"header-text\" href=\"http://localhost:5000/\"><img class=\"header-logo\" src=\"https://pilihmentor.com/wp-content/uploads/2021/10/logo.png\" alt=\"Pilihmentor.com\"></a>'
+    html += '                    </td>'
+    html += '                    <td>'
+    html += '                        <a class="register-button" href="#">Register</a>'
+    html += '                    </td>'
+    html += '                </tr>'
+    html += '            </table>'
+    html += '        </div>'
+    html += '    </div>'
+    html += '    <div class=\"rekap-area\">'
+    html += '        <div class=\"title-area\">'
+    html += '            <p class=\"rekap-title\">Chat History Bot</p>'
+    html += '        </div>'
+    html += '        <div class=\"rekap-items\">'
+
+    for i in range(len(rekap['logs'])):
+        if (rekap['logs'][i]['status'] == "Solved"):
+            html += '            <div class=\"solved-item\">'
+        else:
+            html += '            <div class=\"not-solved-item\">'
+        html += '                <table class=\"rekap-item\">'
+        html += '                    <tr>'
+        html += '                        <td class=\"nomer-rekap\">'
+        html += '                            <b>'+str(i+1)+'.</b>'
+        html += '                        </td>'
+        html += '                        <td class=\"info-rekap\">'
+        assignedMentorMessage = ""
+        if (rekap['logs'][i]['assignedMentor'] != None):
+            assignedMentorMessage = "<br>Assigned Mentor: "+rekap['logs'][i]['assignedMentor']
+        html += '                            <b><i>'+rekap['logs'][i]['waktu']+"</b><br>User: "+rekap['logs'][i]['user']+"<br>Masalah: "+rekap['logs'][i]['masalah']+assignedMentorMessage+"<br>Status: "+rekap['logs'][i]['status']+"</i>"
+        html += '                        </td>'
+        html += '                    </tr>'
+        html += '                </table>'
+        html += '            </div>'
+    
+    html += '        </div>'
+    html += '    </div>'
     html += '    </body>\n'
     html += '</html>'
 
@@ -166,19 +252,27 @@ def processInput(text):
     exitFlag = max(p.bm(textl, "exit"), p.bm(textl, "keluar"), p.bm(textl, "cancel"))
 
     now = datetime.now()
+    
+    with open('test/status.json') as f:
+        status = json.load(f)
 
-    f = open("test/logs.txt", "r")
-    chatLogs = f.readlines()
-    for line in chatLogs:
-        type = line[0]
-        if type == "U":
-            lastBotMessage = line[20:-1]
+    if (status['lastProcess'] == 'login' and status['nama'] == None):
+        status['nama'] = text
+
+        f = open("test/logs.txt", "a+")
+        response = "Halo, "+text+"! Bisa ceritakan masalahmu?"
+        log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
+        f.write(log)
+        f.close()
+
+        f = open("test/status.json", "w")
+        f.write(json.dumps(status))
+        f.close()
+
+        return None
     
-    with open('test/config.json') as f:
-        config = json.load(f)
-    
-    if (config['lastProcess'] == "request-elaborasi-masalah" and config['masalah'] == "ads"):
-        return handleAdsMasalah(now, textl, config, exitFlag)
+    if (status['lastProcess'] == "request-elaborasi-masalah" and status['masalah'] == "ads"):
+        return handleAdsMasalah(now, textl, status, exitFlag)
     
     #jika bukan sambungan dari previous process
     if (bidangFlag) != -1:
@@ -190,7 +284,7 @@ def processInput(text):
             f.write(log)
             f.close()
         else:
-            config['bidang'] = bidang
+            status['bidang'] = bidang
 
             #--- INI NANTI AMBIL DARI DATABASE ---#
 
@@ -201,15 +295,15 @@ def processInput(text):
 
             #--- END ---#
             
-            keywords = p.findKeywords(textl, config['bidang'], keywords_list)
+            keywords = p.findKeywords(textl, status['bidang'], keywords_list)
             if (p.keywordsIntersect(keywords, keywords_ads)):
-                handleAdsMasalah(now, textl, config, exitFlag)
+                handleAdsMasalah(now, textl, status, exitFlag)
             elif (p.keywordsIntersect(keywords, keywords_hire)):
-                handleHireMasalah(now, textl, config, exitFlag)
+                handleHireMasalah(now, textl, status, exitFlag)
             elif (p.keywordsIntersect(keywords, keywords_modal)):
-                handleModalMasalah(now, textl, config, exitFlag)
+                handleModalMasalah(now, textl, status, exitFlag)
             else:
-                handleUnknownMasalah(textl, config)
+                handleUnknownMasalah(textl, status)
 
     elif(sapaFlag != -1):
         f = open("test/logs.txt", "a+")
@@ -254,21 +348,21 @@ def loadTasks():
     return tasks
 
 
-def handleAdsMasalah(now, textl, config, exitFlag):
+def handleAdsMasalah(now, textl, status, exitFlag):
     #--- INI NANTI AMBIL DARI DATABASE ---#
 
     keywords_level2_list = ["instagram", "ig", "facebook", "fb", "google", "adsense"]
 
     #--- END ---#
 
-    keywords = p.findKeywords(textl, config['bidang'], keywords_level2_list)
+    keywords = p.findKeywords(textl, status['bidang'], keywords_level2_list)
     if (p.keywordsIntersect(keywords, ["instagram", " ig"])):
-        config['lastProcess'] = "jawab-masalah"
-        config['masalah'] = "instagram ads"
-        config['isMasalahSelesai'] = True
+        status['lastProcess'] = "jawab-masalah"
+        status['masalah'] = "instagram ads"
+        status['isMasalahSelesai'] = True
         
-        f = open("test/config.json", "w")
-        f.write(json.dumps(config))
+        f = open("test/status.json", "w")
+        f.write(json.dumps(status))
         f.close()
 
         #--- DATABASE CALL ---#
@@ -287,12 +381,12 @@ def handleAdsMasalah(now, textl, config, exitFlag):
 
         responFollowUpMentor()
     elif (p.keywordsIntersect(keywords, ["facebook", "fb"])):
-        config['lastProcess'] = "jawab-masalah"
-        config['masalah'] = "facebook ads"
-        config['isMasalahSelesai'] = True
+        status['lastProcess'] = "jawab-masalah"
+        status['masalah'] = "facebook ads"
+        status['isMasalahSelesai'] = True
 
-        f = open("test/config.json", "w")
-        f.write(json.dumps(config))
+        f = open("test/status.json", "w")
+        f.write(json.dumps(status))
         f.close()
         
         #--- DATABASE CALL ---#
@@ -306,12 +400,12 @@ def handleAdsMasalah(now, textl, config, exitFlag):
 
         responFollowUpMentor()
     elif (p.keywordsIntersect(keywords, ["google", "adsense"])):
-        config['lastProcess'] = "jawab-masalah"
-        config['masalah'] = "google ads"
-        config['isMasalahSelesai'] = True
+        status['lastProcess'] = "jawab-masalah"
+        status['masalah'] = "google ads"
+        status['isMasalahSelesai'] = True
 
-        f = open("test/config.json", "w")
-        f.write(json.dumps(config))
+        f = open("test/status.json", "w")
+        f.write(json.dumps(status))
         f.close()
 
         #--- DATABASE CALL ---#
@@ -326,7 +420,7 @@ def handleAdsMasalah(now, textl, config, exitFlag):
         responFollowUpMentor()
     else:
         if (exitFlag != -1):
-            config['lastProcess'] = "jawab-masalah"
+            status['lastProcess'] = "jawab-masalah"
 
             f = open("test/logs.txt", "a+")
             response = "Halo! Bisa ceritakan masalahmu?"
@@ -340,29 +434,29 @@ def handleAdsMasalah(now, textl, config, exitFlag):
         f.write(log)
         f.close()
 
-        config['lastProcess'] = "request-elaborasi-masalah"
-        config['masalah'] = "ads"
-        config['isMasalahSelesai'] = False
+        status['lastProcess'] = "request-elaborasi-masalah"
+        status['masalah'] = "ads"
+        status['isMasalahSelesai'] = False
         
-        f = open("test/config.json", "w")
-        f.write(json.dumps(config))
+        f = open("test/status.json", "w")
+        f.write(json.dumps(status))
         f.close()
 
-def handleHireMasalah(now, textl, config, exitFlag):
+def handleHireMasalah(now, textl, status, exitFlag):
     #--- INI NANTI AMBIL DARI DATABASE ---#
 
     keywords_level2_list = ["programmer"]
 
     #--- END ---#
 
-    keywords = p.findKeywords(textl, config['bidang'], keywords_level2_list)
+    keywords = p.findKeywords(textl, status['bidang'], keywords_level2_list)
     if (p.keywordsIntersect(keywords, ["programmer"])):
-        config['lastProcess'] = "jawab-masalah"
-        config['masalah'] = "hire programmer"
-        config['isMasalahSelesai'] = True
+        status['lastProcess'] = "jawab-masalah"
+        status['masalah'] = "hire programmer"
+        status['isMasalahSelesai'] = True
 
-        f = open("test/config.json", "w")
-        f.write(json.dumps(config))
+        f = open("test/status.json", "w")
+        f.write(json.dumps(status))
         f.close()
 
         #--- DATABASE CALL ---#
@@ -376,25 +470,25 @@ def handleHireMasalah(now, textl, config, exitFlag):
 
         responFollowUpMentor()
     else:
-        config['masalah'] = "sumber daya manusia"
+        status['masalah'] = "sumber daya manusia"
 
-        handleUnknownMasalah(textl, config)
+        handleUnknownMasalah(textl, status)
     
-def handleModalMasalah(now, textl, config, exitFlag):
+def handleModalMasalah(now, textl, status, exitFlag):
     #--- INI NANTI AMBIL DARI DATABASE ---#
 
     keywords_level2_list = ["invest"]
 
     #--- END ---#
 
-    keywords = p.findKeywords(textl, config['bidang'], keywords_level2_list)
+    keywords = p.findKeywords(textl, status['bidang'], keywords_level2_list)
     if (p.keywordsIntersect(keywords, ["invest"])):
-        config['lastProcess'] = "jawab-masalah"
-        config['masalah'] = "cari investor"
-        config['isMasalahSelesai'] = True
+        status['lastProcess'] = "jawab-masalah"
+        status['masalah'] = "cari investor"
+        status['isMasalahSelesai'] = True
 
-        f = open("test/config.json", "w")
-        f.write(json.dumps(config))
+        f = open("test/status.json", "w")
+        f.write(json.dumps(status))
         f.close()
 
         #--- DATABASE CALL ---#
@@ -408,10 +502,10 @@ def handleModalMasalah(now, textl, config, exitFlag):
 
         responFollowUpMentor()
     else:
-        config['masalah'] = "modal"
-        handleUnknownMasalah(textl, config)
+        status['masalah'] = "modal"
+        handleUnknownMasalah(textl, status)
 
-def handleUnknownMasalah(textl, config):
+def handleUnknownMasalah(textl, status):
     now = datetime.now()
 
     f = open("test/logs.txt", "a+")
@@ -420,10 +514,12 @@ def handleUnknownMasalah(textl, config):
     f.write(log)
     f.close()
     
-    config['lastProcess'] = "solusi-tidak-ditemukan"
-    f = open("test/config.json", "w")
-    f.write(json.dumps(config))
+    status['lastProcess'] = "solusi-tidak-ditemukan"
+    f = open("test/status.json", "w")
+    f.write(json.dumps(status))
     f.close()
+
+    responFollowUpMentor()
 
 def responFollowUpMentor():
     now = datetime.now()
@@ -434,12 +530,12 @@ def responFollowUpMentor():
     f.write(log)
     f.close()
 
-    with open('test/config.json') as f:
-        config = json.load(f)
+    with open('test/status.json') as f:
+        status = json.load(f)
     
-    config['lastProcess'] = "tawar-bantuan-mentor"
-    f = open("test/config.json", "w")
-    f.write(json.dumps(config))
+    status['lastProcess'] = "tawar-bantuan-mentor"
+    f = open("test/status.json", "w")
+    f.write(json.dumps(status))
     f.close()
 
 def displayHubungiMentorButton():
@@ -452,6 +548,52 @@ def badPesanBody():
 
     return body
 
+def checkLog():
+    with open('test/status.json') as f:
+        status = json.load(f)
+    
+    if (status['waktu'] != None):
+        waktu = datetime.strptime(status['waktu'], "%m/%d/%Y %H:%M:%S")
+        now = datetime.now()
+        diff = now-waktu
+        if (diff.total_seconds() > 14.5):
+            writeLog()
+
+def writeLog():
+    with open('test/status.json') as f:
+        status = json.load(f)
+
+    with open('test/rekap.json') as f:
+        rekap = json.load(f)
+
+    if (status['masalah'] == None):
+        return None
+    
+    statusSelesai = "Not Solved"
+    if (status['isMasalahSelesai'] == True):
+        statusSelesai = "Solved"
+
+    for i in range(len(rekap['logs'])):
+        log = rekap['logs'][i]
+        if (log['user'] == status['nama'] and log['masalah'] == status['masalah']):
+            if (log['waktu'] == status['waktu']):
+                return None
+            
+            rekap['logs'][i]['status'] = statusSelesai
+            rekap['logs'][i]['assignedMentor'] = status['assignedMentor']
+    
+            f = open("test/rekap.json", "w")
+            f.write(json.dumps(rekap))
+            f.close()
+
+            return None
+
+    new_log = {'waktu': status['waktu'], 'user': status['nama'], 'masalah': status['masalah'], 'status': statusSelesai, 'assignedMentor': status['assignedMentor']}
+    rekap['logs'].append(new_log)
+    
+    f = open("test/rekap.json", "w")
+    f.write(json.dumps(rekap))
+    f.close()
 
 #--- Main ---#
 

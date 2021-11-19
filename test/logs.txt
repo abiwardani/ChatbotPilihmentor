@@ -1,7 +1,7 @@
-B11/19/2021 16:53:44Halo! Bisa ceritakan masalahmu?
-U11/19/2021 16:53:48Halo! Aku punya bisnis di bidang fashion, kita mau bikin apps mobile tapi gatau dimana bisa hire programmer yang berkualitas. Kira2 gimana ya?
-B11/19/2021 16:53:48<b>STEPS FOR HIRE PROGRAMMER<b>
-B11/19/2021 16:53:48Bila ada kendala, kamu bisa langsung menghubungi salah satu mentor kami dengan menekan tombol di bawah ini
-U11/19/2021 16:53:54Nice thanks
-B11/19/2021 16:53:54Sama-sama! Apakah ada hal lain yang bisa bot bantu?
-B11/19/2021 16:54:10Nama mentor  : Johann<br>Keahlian     : Fashion<br>Link meeting : <a href="https://meet.google.com/yyz-hraf-cdk" class="meeting-link" target="_blank">meet.google.com/yyz-hraf-cdk</a>
+B11/19/2021 19:34:17Halo! Ketik nama kamu untuk memulai percakapan
+U11/19/2021 19:34:24Ryan
+B11/19/2021 19:34:24Halo, Ryan! Bisa ceritakan masalahmu?
+U11/19/2021 19:34:26Halo, saya punya bisnis di bidang desain grafis, tapi perlu modal untuk mencetak produk, kira2 bisa cari dimana ya?
+B11/19/2021 19:34:26Bot belum bisa membantu masalahmu saat ini, silahkan hubungi mentor dengan menekan tombol di bawah ini
+B11/19/2021 19:34:26Bila ada kendala, kamu bisa langsung menghubungi salah satu mentor kami dengan menekan tombol di bawah ini
+B11/19/2021 19:34:28Nama mentor  : Johann<br>Keahlian     : Desain Grafis<br>Link meeting : <a href="https://meet.google.com/yyz-hraf-cdk" class="meeting-link" target="_blank">meet.google.com/yyz-hraf-cdk</a>

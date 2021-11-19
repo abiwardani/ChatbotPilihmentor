@@ -30,3 +30,8 @@
     background-color: #f3e527;
     float: right;
 }
+
+.register-button:hover {
+    background-color: #f5ed87;
+    cursor: pointer;
+}
