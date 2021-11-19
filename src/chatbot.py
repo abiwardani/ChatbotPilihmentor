@@ -12,7 +12,7 @@ app.config['TEMPLATES_AUTO_RELOAD'] = True
 #--- App Pages ---#
 
 @app.route('/')
-def mainPage():
+def indexPage():
     f = open("test/logs.txt", "w")
     message = "Halo! Bisa ceritakan masalahmu?"
     now = datetime.now()
@@ -25,7 +25,7 @@ def mainPage():
     f.write(json.dumps(config))
     f.close()
     
-    return render_template('mainpage.html')
+    return render_template('index.html')
 
 @app.route('/displayKontakMentor')
 def displayKontakMentor():
@@ -39,7 +39,7 @@ def displayKontakMentor():
 
     response =  "Nama mentor  : Johann<br>"
     response += "Keahlian     : "+config['bidang'].title()+"<br>"
-    response += "Link meeting : <a href=\"https://meet.google.com/yyz-hraf-cdk\">meet.google.com/yyz-hraf-cdk</a>"
+    response += "Link meeting : <a href=\"https://meet.google.com/yyz-hraf-cdk\" class=\"meeting-link\" target=\"_blank\">meet.google.com/yyz-hraf-cdk</a>"
 
     #--- End ---#
 

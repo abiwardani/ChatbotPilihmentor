@@ -31,6 +31,7 @@ div.chatscroll {
     height: 500px;
     width: 800px;
     margin: 20px 0px 10px 0px;
+    padding: 5px;
     display: flex;
     flex-direction: column-reverse;
 }
@@ -139,6 +140,14 @@ a.hubungi-mentor-button {
     font-weight: normal;
     font-family: Arial;
     font-size: 18px;
+}
+
+a.meeting-link, a.meeting-link:visited {
+    text-decoration: underline;
+    color: #e98d8d;
+    font-weight: normal;
+    font-family: Arial;
+    font-size: 14px;
 }
 
 #message {

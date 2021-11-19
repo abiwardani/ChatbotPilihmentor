@@ -1,12 +1,3 @@
-import re
-import datetime
-
-formatTanggal1 = '([0-3]?[0-9]) ([a-zA-Z]+) ([0-9]{2,4})' #tanggal bulan tahun
-formatTanggal2 = '([a-zA-Z]+) ([0-3]?[0-9]) ([0-9]{2,4})' #bulan tanggal tahun
-formatTanggal3 = '([0-3][0-9])/([0-1][0-9])/([0-9]{2,4})' #DD/MM/YYYY
-formatTanggal4 = '([0-1][0-9])/([0-3][0-9])/([0-9]{2,4})' #MM/DD/YYYY, bukan untuk user input
-formatJenis = '([Tt]ubes|[Tt]ucil|[Kk]uis|[Uu]jian|[Pp]raktikum)'
-
 def bm(text, pattern):
     lastx = {}
     lenP = len(pattern)

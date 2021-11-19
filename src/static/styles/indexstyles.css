@@ -1,0 +1,59 @@
+body, html {
+    height: 100%;
+    margin: 0px;
+}
+
+.body {
+    height: 100%;
+    background-color: #343DAC;
+    padding: 20px;
+}
+
+.content-table {
+    border-collapse: collapse;
+}
+
+.text-content {
+    padding: 0px 5px 0px 30px;
+}
+
+.slogan-text {
+    font-family: Arial;
+    font-style: italic;
+    font-weight: 900;
+    font-size: 40px;
+    line-height: 50px;
+    letter-spacing: 0.05em;
+    color: #FFFFFF;
+    margin: 0px;
+}
+
+.brand-text {
+    font-family: Arial;
+    font-style: italic;
+    font-weight: 900;
+    font-size: 40px;
+    line-height: 50px;
+    letter-spacing: 0.05em;
+    color: #FA6531;
+}
+
+.deskripsi {
+    font-family: Arial;
+    font-size: 18px;
+    line-height: 25px;
+    letter-spacing: 0.08em;
+    padding: 0px 0px 15px 0px;
+    color: #ffffff;
+}
+
+.chat-button {
+    text-decoration: none;
+    font-family: Arial;
+    font-weight: 900;
+    font-size: 15px;
+    border-radius: 25px;
+    padding: 15px 30px 15px 30px;
+    color: #000000;
+    background-color: #f3e527;
+}
