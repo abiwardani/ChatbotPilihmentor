@@ -5,9 +5,18 @@ from flask import Flask, render_template, request, url_for, redirect, make_respo
 from werkzeug.utils import secure_filename
 import json
 import time
+from xmlrpc import client as xmlrpclib
+from flask_odoo import Odoo
 
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.config["ODOO_URL"] = "http://localhost:8069"
+app.config["ODOO_DB"] = "odoo"
+app.config["ODOO_USERNAME"] = "admin"
+app.config["ODOO_PASSWORD"] = "admin"
+
+#app.config["USE_UNVERIFIED_SSL_CONTEXT"] = "True" #--- KALAU RUN DI MAC ---#
+odoo = Odoo(app)
 
 #--- App Pages ---#
 
@@ -37,14 +46,16 @@ def displayKontakMentor():
     with open('test/status.json') as g:
         status = json.load(g)
 
-    namaMentor = "Johann"
-    bidangMentor = status['bidang'].title()
-    linkMeeting = "https://meet.google.com/yyz-hraf-cdk"
+    namaMentor, keahlianMentor, linkMeeting = getRekomendasiMentor()
+    
+    #namaMentor = "Johann"
+    #bidangMentor = status['bidang'].title()
+    #linkMeeting = "https://meet.google.com/yyz-hraf-cdk"
 
     #--- End ---#
 
     response =  "Nama mentor  : "+namaMentor+"<br>"
-    response += "Keahlian     : "+bidangMentor+"<br>"
+    response += "Keahlian     : "+keahlianMentor+"<br>"
     response += "Link meeting : <a href=\""+linkMeeting+"\" class=\"meeting-link\" target=\"_blank\">"+linkMeeting[8::]+"</a>"
 
     status['assignedMentor'] = "Johann"
@@ -104,6 +115,43 @@ def rekapPage():
     resp = make_response(render_template('chat.html'))
     return resp
 
+#--- Database operations ---#
+
+class Rekap(odoo.Model):
+    _name = "res.Rekap"
+
+    waktu = odoo.StringType()
+    nama_pengguna = odoo.StringType()
+    masalah = odoo.StringType()
+    status_permasalahan = odoo.StringType()
+    rekomendasi_mentor = odoo.StringType()
+
+class Mentor(odoo.Model):
+    _name = "res.Mentor"
+
+    id_mentor = odoo.StringType()
+    nama_mentor = odoo.StringType()
+    keahlian = odoo.StringType()
+    jam_avail = odoo.StringType()
+    pranala_mentoring = odoo.StringType()
+
+def updateLogOdoo(values):
+    #INSERT INTO rekap VALUES (values);
+    new_rekap = Rekap()
+    new_rekap.waktu = values['waktu']
+    new_rekap.nama_pengguna = values['user']
+    new_rekap.masalah = values['masalah']
+    new_rekap.status_permasalahan = values['status']
+    new_rekap.rekomendasi_mentor = values['assignedMentor']
+
+    new_rekap.create_or_update()
+
+def getRekomendasiMentor(bidang):
+    #SELECT * FROM Mentor WHERE jam_avail <= NOW() LIMIT 1;
+    mentor = Mentor()
+    mentor = mentor.search_read([['jam_avail', '<=', datetime.now().strftime("%m/%d/%Y %H:%M:%S")]])[0]
+
+    return mentor.nama_mentor, mentor.keahlian, mentor.pranala_mentoring
 
 #--- Text Processing ---#
 
@@ -581,6 +629,8 @@ def writeLog():
             
             rekap['logs'][i]['status'] = statusSelesai
             rekap['logs'][i]['assignedMentor'] = status['assignedMentor']
+
+            writeLogOdoo(rekap['logs'][i]) #update odoo data
     
             f = open("test/rekap.json", "w")
             f.write(json.dumps(rekap))
@@ -590,6 +640,8 @@ def writeLog():
 
     new_log = {'waktu': status['waktu'], 'user': status['nama'], 'masalah': status['masalah'], 'status': statusSelesai, 'assignedMentor': status['assignedMentor']}
     rekap['logs'].append(new_log)
+
+    writeLogOdoo(new_log) #update odoo data
     
     f = open("test/rekap.json", "w")
     f.write(json.dumps(rekap))
