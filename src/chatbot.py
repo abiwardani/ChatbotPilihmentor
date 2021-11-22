@@ -8,6 +8,7 @@ import time
 
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
+TIMEOUT = '30'
 
 #--- App Pages ---#
 
@@ -91,7 +92,7 @@ def chatPage():
         file.write(html)
     
     resp = make_response(render_template('chat.html'))
-    resp.headers['Refresh'] = '15'
+    resp.headers['Refresh'] = TIMEOUT
     return resp
 
 @app.route('/Rekap')
