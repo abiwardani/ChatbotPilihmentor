@@ -1,7 +1,1 @@
-B11/19/2021 19:34:17Halo! Ketik nama kamu untuk memulai percakapan
-U11/19/2021 19:34:24Ryan
-B11/19/2021 19:34:24Halo, Ryan! Bisa ceritakan masalahmu?
-U11/19/2021 19:34:26Halo, saya punya bisnis di bidang desain grafis, tapi perlu modal untuk mencetak produk, kira2 bisa cari dimana ya?
-B11/19/2021 19:34:26Bot belum bisa membantu masalahmu saat ini, silahkan hubungi mentor dengan menekan tombol di bawah ini
-B11/19/2021 19:34:26Bila ada kendala, kamu bisa langsung menghubungi salah satu mentor kami dengan menekan tombol di bawah ini
-B11/19/2021 19:34:28Nama mentor  : Johann<br>Keahlian     : Desain Grafis<br>Link meeting : <a href="https://meet.google.com/yyz-hraf-cdk" class="meeting-link" target="_blank">meet.google.com/yyz-hraf-cdk</a>
+B11/22/2021 16:31:15Halo! Ketik nama kamu untuk memulai percakapan

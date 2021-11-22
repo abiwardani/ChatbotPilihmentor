@@ -250,6 +250,7 @@ def processInput(text):
     bidangFlag = p.bm(textl, "bidang")
     sapaFlag = max(p.bm(textl, "halo"), p.bm(textl, "hai"), p.exactmatch(textl, "hi"), p.bm(textl, "hei"), p.bm(textl, "hey"), p.bm(textl, "hello"), p.bm(textl, "hallo"))
     terimakasihFlag = max(p.bm(textl, "terima kasih"), p.bm(textl, "terimakasih"), p.bm(textl, "thanks"), p.bm(textl, "tks"), p.bm(textl, "makasih"), p.bm(textl, "tq"), p.bm(textl, "thank you"))
+    questionFlag = p.bm(textl, "?")
     exitFlag = max(p.bm(textl, "exit"), p.bm(textl, "keluar"), p.bm(textl, "cancel"))
 
     now = datetime.now()
@@ -306,6 +307,12 @@ def processInput(text):
             else:
                 handleUnknownMasalah(textl, status)
 
+    elif (questionFlag != -1):
+        f = open("test/logs.txt", "a+")
+        response = "Maaf, kami tidak bisa mendeteksi bidang perusahaan kamu. Silahkan jelaskan kembali masalah kamu dengan penjabaran \"perusahaan saya di bidang X\"."
+        log = "B"+now.strftime("%m/%d/%Y %H:%M:%S")+response+"\n"
+        f.write(log)
+        f.close()
     elif(sapaFlag != -1):
         f = open("test/logs.txt", "a+")
         response = "Halo! Bisa ceritakan masalahmu?"
@@ -545,7 +552,7 @@ def displayHubungiMentorButton():
     return html
 
 def badPesanBody():
-    body = "Maaf, bot tidak mengenal pesan itu. Bisa ceritakan masalahmu?"
+    body = "Maaf, bot tidak mengenal pesan itu. Bisa ceritakan masalahmu?<br><br>Pastikan nama bidang dan kata kunci masalah terdapat dalam penjelasanmu."
 
     return body
 

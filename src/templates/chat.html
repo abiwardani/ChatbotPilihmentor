@@ -2,7 +2,27 @@
 <html>
     <head>
         <title>Pilihmentor</title>
-        <link rel="stylesheet" href="static/styles/rekapstyles.css">        <link rel="stylesheet" href="static/styles/headerstyles.css">    </head>
+        <link rel="stylesheet" href="static/styles/chatbotstyles.css">        <link rel="stylesheet" href="static/styles/headerstyles.css">    </head>
     <body>
-    <div class="header">        <div class="header-box">            <table class="header-table">                <tr>                    <td>                        <a class="header-text" href="http://localhost:5000/"><img class="header-logo" src="https://pilihmentor.com/wp-content/uploads/2021/10/logo.png" alt="Pilihmentor.com"></a>                    </td>                    <td>                        <a class="register-button" href="#">Register</a>                    </td>                </tr>            </table>        </div>    </div>    <div class="rekap-area">        <div class="title-area">            <p class="rekap-title">Chat History Bot</p>        </div>        <div class="rekap-items">            <div class="solved-item">                <table class="rekap-item">                    <tr>                        <td class="nomer-rekap">                            <b>1.</b>                        </td>                        <td class="info-rekap">                            <b><i>11/19/2021 18:18:36</b><br>User: Abi<br>Masalah: instagram ads<br>Status: Solved</i>                        </td>                    </tr>                </table>            </div>            <div class="solved-item">                <table class="rekap-item">                    <tr>                        <td class="nomer-rekap">                            <b>2.</b>                        </td>                        <td class="info-rekap">                            <b><i>11/19/2021 18:19:16</b><br>User: Juan<br>Masalah: hire programmer<br>Status: Solved</i>                        </td>                    </tr>                </table>            </div>            <div class="not-solved-item">                <table class="rekap-item">                    <tr>                        <td class="nomer-rekap">                            <b>3.</b>                        </td>                        <td class="info-rekap">                            <b><i>11/19/2021 19:34:28</b><br>User: Ryan<br>Masalah: modal<br>Assigned Mentor: Johann<br>Status: Not Solved</i>                        </td>                    </tr>                </table>            </div>        </div>    </div>    </body>
+    <div class="header">        <div class="header-box">            <table class="header-table">                <tr>                    <td>                        <a class="header-text" href="http://localhost:5000/"><img class="header-logo" src="https://pilihmentor.com/wp-content/uploads/2021/10/logo.png" alt="Pilihmentor.com"></a>                    </td>                    <td>                        <a class="register-button" href="#">Register</a>                    </td>                </tr>            </table>        </div>    </div>    <div class="chatarea">
+    <div class="chatscroll">
+        <table class="chat">
+            <tr><td><p class="datebubble">Today</p></td></tr>
+            <tr><td><p class="botbubble">Halo! Ketik nama kamu untuk memulai percakapan</p><p class="bottime">16:30</p></td></tr>
+            <tr><td><p class="userbubble">Andi</p><p class="usertime">16:30</p></td></tr>
+            <tr><td><p class="botbubble">Halo, Andi! Bisa ceritakan masalahmu?</p><p class="bottime">16:30</p></td></tr>
+            <tr><td><p class="userbubble">Halo!</p><p class="usertime">16:30</p></td></tr>
+            <tr><td><p class="botbubble">Halo! Bisa ceritakan masalahmu?</p><p class="bottime">16:30</p></td></tr>
+            <tr><td><p class="userbubble">Terima kasih!</p><p class="usertime">16:31</p></td></tr>
+            <tr><td><p class="botbubble">Sama-sama! Apakah ada hal lain yang bisa bot bantu?</p><p class="bottime">16:31</p></td></tr>
+        </table>
+    </div>
+    <form action="http://localhost:5000/Chat" method=POST>
+        <div class="messageBox">
+            <input type="text" name="messageInput" id="message" placeholder="Tulis pesan kamu di sini..." autocomplete="off">
+            <input type="submit" id="send" name="sendButton" value="Kirim">
+        </div>
+    </form>
+    </div>
+    </body>
 </html>
